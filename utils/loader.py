@@ -84,9 +84,10 @@ def load_class_info(algo, seed, session):
     url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algorithm}/class_order/{file_name}"
     class_order = load_npy(url)
     return dict(class_order = class_order,
-                all_classes = class_order[:session*5],
-                new_classes = class_order[(session-1)*5:session*5],
-                old_classes = class_order[:(session-1)*5])
+                learned_classes = class_order[:session*5],
+                earlier_classes = class_order[:(session-1)*5],
+                current_classes = class_order[(session-1)*5:session*5],
+                unknown_classes = class_order[:session*5],
 
 def load_lop_resnet18(algo, seed, session):
     algorithm = ALGORITHM[algo]
