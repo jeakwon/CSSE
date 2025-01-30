@@ -9,6 +9,14 @@ import torch
 
 from csse.lop.nets.torchvision_modified_resnet import build_resnet18
 
+ALGORITHM = {
+    'bp':'base_deep_learning_system',
+    'cb':'continual_backpropagation',
+    'hr':'head_resetting',
+    'rt':'retrained_network',
+    'sp':'shrink_and_perturb',
+}
+
 # Define a unified cache directory for both .npy and .pt files
 CACHE_DIR = os.path.expanduser("~/.cache/csse/")
 os.makedirs(CACHE_DIR, exist_ok=True)  # Ensure cache directory exists
@@ -71,7 +79,9 @@ def load_state_dict(file_path: str):
         raise ValueError(f"File or URL not found: {file_path}")
 
 def load_class_info(algo, seed, session):
-    url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algo}/class_order/index-{seed}.npy"
+    algorithm = ALGORITHM[algo]
+    file_name = f'index-{seed}.npy'
+    url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algorithm}/class_order/{file_name}"
     class_order = load_npy(url)
     return dict(class_order = class_order,
                 all_classes = class_order[:session*5],
@@ -79,7 +89,9 @@ def load_class_info(algo, seed, session):
                 old_classes = class_order[:(session-1)*5])
 
 def load_lop_resnet18(algo, seed, session):
-    url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algo}/model_parameters/index-{seed}_epoch-{session*200}.pt"
+    algorithm = ALGORITHM[algo]
+    file_name = f'index-{seed}_epoch-{session*200}.pt'
+    url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algorithm}/model_parameters/{file_name}"
     state_dict = load_state_dict(url)
     model = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d)
     model.load_state_dict(state_dict)
