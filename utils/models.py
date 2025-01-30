@@ -7,7 +7,7 @@ def load_lop_resnet18(weight_url: str):
     print(f"Using cache directory: {cache_dir}")
 
     state_dict = torch.hub.load_state_dict_from_url(
-        weight_url, map_location="cpu", check_hash=True, progress=True
+        weight_url, map_location="cpu", check_hash=False, progress=True
     )
 
     lop_resnet18 = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d)
