@@ -8,8 +8,8 @@ import numpy as np
 import torch
 
 from csse.external_codes.lop.torchvision_modified_resnet import build_resnet18
-from csse.external_codes.lop.mlproj_manager.cifar_data_loader import CifarDataSet
-from csse.external_codes.lop.mlproj_manager.image_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
+from csse.external_codes.mlproj_manager.cifar_data_loader import CifarDataSet
+from csse.external_codes.mlproj_manager.image_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 
 ALGORITHM = {
     'bp':'base_deep_learning_system',
