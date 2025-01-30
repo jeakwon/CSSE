@@ -56,7 +56,7 @@ class CustomDataSet(Dataset):
 
 
 # from mlproj_manager.util.data_preprocessing_and_transformations import normalize, preprocess_labels
-from ccse.external_codes.mlproj_manager.normalization_and_preprocessing import normalize, preprocess_labels
+from csse.external_codes.mlproj_manager.normalization_and_preprocessing import normalize, preprocess_labels
 
 # from mlproj_manager.definitions import CIFAR_DATA_PATH
 # https://github.com/JFernando4/Research_Project_Manager/blob/master/mlproj_manager/definitions.py
