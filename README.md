@@ -1,7 +1,5 @@
-# CSSE
-Class Selective Synaptic Engram
-
-# Install
+# Class Selective Synaptic Engram (csse)
+## Install
 ```
-pip install --upgrade git+https://github.com/jeakwon/CSSE.git -q
+git clone https://github.com/jeakwon/csse.git -q && pip install -e csse/ -q
 ```
