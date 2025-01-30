@@ -1,10 +1,16 @@
 import os
-import urllib.parse
+import re
 import requests
-import torch
-import numpy as np
+import urllib.parse
 from io import BytesIO
+
+import numpy as np
+import torch
+
+from huggingface_hub import HfApi
+
 from csse.lop.nets.torchvision_modified_resnet import build_resnet18
+
 
 def is_url(path: str) -> bool:
     """Check if the given path is a URL."""
@@ -22,7 +28,7 @@ def load_npy(file_path):
         raise ValueError(f"File or URL not found: {file_path}")
 
 def load_state_dict(file_path: str):
-    """Load LOP ResNet18 model with support for both URLs and local files."""
+    """Load Pytorch state_dict from either a URL and local file."""
     # Load model weights (either from URL or local file)
     if is_url(file_path):
         print(f"Detected URL: {file_path}")
@@ -39,3 +45,28 @@ def load_state_dict(file_path: str):
         raise ValueError(f"File or URL not found: {file_path}")
     
     return state_dict
+
+def load_lop_experiment(algo, seed):
+    api = HfApi()
+    repo_id = "onlytojay/lop-resnet18"
+    base_url = f"https://huggingface.co/{repo_id}/resolve/main/"
+    files = api.list_repo_files(repo_id)
+
+    class_order_npy_url = None
+    model_parameters_pt_urls = []
+
+    for f in files:
+        url = base_url+f
+        if f"{algo}/class_order/index-{seed}" in f:
+            class_order_npy_url = url
+        elif f"{algo}/model_parameters/index-{seed}" in f:
+            model_parameters_pt_urls.append( url )
+    extract_epoch = lambda x: int(match.group(1)) if (match := re.search(r"epoch-(\d+)\.pt$", x)) else -1
+    
+    model_parameters_pt_urls = sorted(model_parameters_pt_urls, key=extract_epoch)
+    
+    if class_order_npy_url is None:
+        print(f'Experiment with algo={algo} & seed={seed} not exist.')
+        print(f'Please visit {base_url} to check!')
+
+    return class_order_url, model_parameter_urls
