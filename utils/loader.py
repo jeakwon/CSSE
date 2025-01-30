@@ -7,6 +7,7 @@ from io import BytesIO
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from torchvision import transforms
 
 from csse.external_codes.lop.torchvision_modified_resnet import build_resnet18
 from csse.external_codes.mlproj_manager.cifar_data_loader import CifarDataSet
