@@ -1,4 +1,4 @@
-# https://github.com/shibhansh/loss-of-plasticity/blob/main/lop/nets/torchvision_modified_resnet.py
+# Copy of https://github.com/shibhansh/loss-of-plasticity/blob/main/lop/nets/torchvision_modified_resnet.py
 from typing import Callable, List, Optional, Type, Union
 
 import torch
