@@ -1,1 +1,1 @@
-from csse.model.torchvision_modified_resnet import build_resnet18
+from .torchvision_modified_resnet import build_resnet18
