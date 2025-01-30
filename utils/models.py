@@ -69,4 +69,4 @@ def load_lop_experiment(algo, seed):
         print(f'Experiment with algo={algo} & seed={seed} not exist.')
         print(f'Please visit {base_url} to check!')
 
-    return class_order_url, model_parameter_urls
+    return class_order_npy_url, model_parameters_pt_urls
