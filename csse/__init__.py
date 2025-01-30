@@ -1,2 +1,1 @@
-def test(x):
-    return x
+from lop.nets.torchvision_modified_resnet import build_resnet18
