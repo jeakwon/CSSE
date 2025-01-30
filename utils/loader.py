@@ -73,11 +73,8 @@ def load_state_dict(file_path: str):
 def load_class_info(algo, seed, session):
     url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algo}/class_order/index-{seed}.npy"
     class_order = load_npy(url)
-    return dict(alog = algo,
-                seed = seed,
-                session = session,
-                class_order = class_order,
-                trained_classes = class_order[:session*5],
+    return dict(class_order = class_order,
+                all_classes = class_order[:session*5],
                 new_classes = class_order[(session-1)*5:session*5],
                 old_classes = class_order[:(session-1)*5])
 
