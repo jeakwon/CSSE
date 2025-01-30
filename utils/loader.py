@@ -16,10 +16,21 @@ ALGORITHM = {
     'rt':'retrained_network',
     'sp':'shrink_and_perturb',
 }
-
 # Define a unified cache directory for both .npy and .pt files
 CACHE_DIR = os.path.expanduser("~/.cache/csse/")
 os.makedirs(CACHE_DIR, exist_ok=True)  # Ensure cache directory exists
+
+class LopResNet18Loader:
+    def __init__(self, algo, seed):
+        self.algo = algo
+        self.seed = seed
+        self.session = None
+        self.class_info = None
+
+    def load_model(self, session):
+        self.session = session
+        self.class_info = load_class_info(algo=self.algo, seed=self.seed, session=self.session)
+        return load_lop_resnet18(algo=self.algo, seed=self.seed, session=session)
 
 def is_url(path: str) -> bool:
     """Check if the given path is a URL."""
