@@ -1,3 +1,5 @@
+import os
+import urllib.parse
 import torch
 from csse.lop.nets.torchvision_modified_resnet import build_resnet18
 
@@ -9,6 +11,9 @@ def load_lop_resnet18(weight_file_path: str):
     # Load model weights (either from URL or local file)
     if is_url(weight_file_path):
         print(f"Detected URL: {weight_file_path}")
+        cache_dir = torch.hub.get_dir()  # Default cache: ~/.cache/torch/hub/checkpoints/
+        print(f"Using cache directory: {cache_dir}")
+
         state_dict = torch.hub.load_state_dict_from_url(
             weight_file_path, map_location="cpu", check_hash=False, progress=True
         )
