@@ -11,16 +11,20 @@ from torchvision import transforms
 
 from csse.external_codes.lop.torchvision_modified_resnet import build_resnet18
 from csse.external_codes.mlproj_manager.cifar_data_loader import CifarDataSet
-from csse.external_codes.mlproj_manager.image_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
+from csse.external_codes.mlproj_manager.image_transformations import (
+    ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
+)
 
+# Mapping of algorithm abbreviations to their full names
 ALGORITHM = {
-    'bp':'base_deep_learning_system',
-    'cb':'continual_backpropagation',
-    'hr':'head_resetting',
-    'rt':'retrained_network',
-    'sp':'shrink_and_perturb',
+    'bp': 'base_deep_learning_system',
+    'cb': 'continual_backpropagation',
+    'hr': 'head_resetting',
+    'rt': 'retrained_network',
+    'sp': 'shrink_and_perturb',
 }
-# Define a unified cache directory for both .npy and .pt files
+
+# Define a unified cache directory for storing .npy and .pt files
 CACHE_DIR = os.path.expanduser("~/.cache/csse/")
 os.makedirs(CACHE_DIR, exist_ok=True)  # Ensure cache directory exists
 
