@@ -55,9 +55,9 @@ def load_cifar100(
         transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
         transformations.append(RandomRotator(degrees=(0,15)))
 
-    cifar_data.set_transformation(transforms.Compose(transformations))
-    train_indices, _ = get_validation_and_train_indices(cifar_data)
-    subsample_cifar_data_set(sub_sample_indices=train_indices, cifar_data=cifar_data)
+        cifar_data.set_transformation(transforms.Compose(transformations))
+        train_indices, _ = get_validation_and_train_indices(cifar_data)
+        subsample_cifar_data_set(sub_sample_indices=train_indices, cifar_data=cifar_data)
     return DataLoader(cifar_data, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
 
 
