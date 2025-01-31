@@ -18,4 +18,5 @@ def load_lop_resnet18(algo, seed, session):
     url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algorithm}/model_parameters/{file_name}"
     state_dict = load_state_dict(url)
     model = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d)
+    model.load_state_dict(state_dict)
     return model
