@@ -26,5 +26,5 @@ def selected_class_accuracy(model, dataloader, selected_classes, device):
             # Compute accuracy for selected classes
             avg_acc += torch.mean((predicted_labels == true_labels).to(torch.float32))
             num_test_batches += 1
-    acc = avg_acc / num_test_batches if num_test_batches > 0 else 0.0
-    return acc.item()
+    acc = (avg_acc / num_test_batches).item() if num_test_batches > 0 else 0.0
+    return acc
