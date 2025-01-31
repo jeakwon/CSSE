@@ -1,6 +1,6 @@
 import torch
 
-def selected_class_accuracy(model, dataloader, selected_classes, device):
+def selected_class_accuracy(model, dataloader, selected_classes, device, verbose=False):
     """Evaluate the model accuracy for selected classes."""
     model.eval()
     total_acc = 0.0
@@ -12,6 +12,9 @@ def selected_class_accuracy(model, dataloader, selected_classes, device):
         ).all().item()
     assert is_selected_classes_in_partition, f'Selected classes must be included in dataloaders partition'
 
+    if len(dataloader)==0:
+        return 0.0
+        
     with torch.no_grad():
         for _, sample in enumerate(dataloader):
             images = sample["image"].to(device)

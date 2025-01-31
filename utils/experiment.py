@@ -17,7 +17,9 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
         self.class_order = load_class_order(algo, seed)
 
         self.train_loader = load_cifar100(train=True, batch_size=batch_size, num_workers=num_workers)
+        self.train_loader.dataset.select_new_partition(self.class_order)
         self.test_loader = load_cifar100(train=False, batch_size=batch_size, num_workers=num_workers)
+        self.test_loader.dataset.select_new_partition(self.class_order)
 
         self.backbone = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d).to(device)
         self.sessions = { session: Session(session=session, experiment=self) for session in sessions }
@@ -39,7 +41,13 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
         return accs
 
     def __getitem__(self, session):
-        return self.sessions[session]()
+        return self.sessions[session]
+
+    def __call__(self, session):
+        return self.sessions[session]
+
+    def __len__(self):
+        return len(self.sessions)
     
     def session(self, session):
         return self.sessions[session]
@@ -72,10 +80,22 @@ class Session:
         return deepcopy(model)
 
     def get_train_acc(self, selected_classes):
-        return selected_class_accuracy(self.model(inplace=True), self.train_loader, selected_classes, self.device)
+        original_partition = self.train_loader.dataset.classes
+
+        self.train_loader.dataset.select_new_partition(self.all_classes)
+        acc = selected_class_accuracy(self.model(inplace=True), self.train_loader, selected_classes, self.device)
+
+        self.train_loader.dataset.select_new_partition(original_partition)
+        return acc
 
     def get_test_acc(self, selected_classes):
-        return selected_class_accuracy(self.model(inplace=True), self.test_loader, selected_classes, self.device)
+        original_partition = self.test_loader.dataset.classes
+
+        self.test_loader.dataset.select_new_partition(self.all_classes)
+        acc = selected_class_accuracy(self.model(inplace=True), self.test_loader, selected_classes, self.device)
+
+        self.test_loader.dataset.select_new_partition(original_partition)
+        return acc
 
     def train_accs(self):
         return { k: self.get_train_acc(v) for k, v in self.class_info.items() }
