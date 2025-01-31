@@ -17,14 +17,25 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
         
         self.class_order = load_class_order(algo, seed, cache_dir=self.cache_dir)
 
-        self.train_loader = load_cifar100(train=True, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
-        self.train_loader.dataset.select_new_partition(self.class_order)
-
-        self.test_loader = load_cifar100(train=False, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
-        self.test_loader.dataset.select_new_partition(self.class_order)
-
+        self._train_loader = load_cifar100(train=True, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
+        self._test_loader = load_cifar100(train=False, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
+        
         self.backbone = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d).to(device)
         self.sessions = { session: Session(session=session, experiment=self) for session in sessions }
+
+    def train_loader(self, inplace=False):
+        data_loader = self._test_loader
+        data_loader.dataset.select_new_partition(self.all_classes)
+        if inplace:
+            return data_loader
+        return deepcopy(data_loader)
+
+    def test_loader(self, inplace=False):
+        data_loader = self._test_loader
+        data_loader.dataset.select_new_partition(self.all_classes)
+        if inplace:
+            return data_loader
+        return deepcopy(data_loader)
 
     def train_accs(self, verbose=True):
         accs = []
@@ -64,8 +75,6 @@ class Session:
         self.device = experiment.device
         self.backbone = experiment.backbone
         self.class_order = experiment.class_order
-        self.train_loader = experiment.train_loader
-        self.test_loader = experiment.test_loader
         self.cache_dir = experiment.cache_dir
 
         self.state_dict = load_lop_resnet18_state_dict(self.algo, self.seed, self.session, cache_dir=self.cache_dir)
@@ -73,6 +82,20 @@ class Session:
         self.all_classes = self.class_info['all_classes']
         self.old_classes = self.class_info['old_classes']
         self.new_classes = self.class_info['new_classes']
+    
+    def train_loader(self, inplace=False):
+        data_loader = self.experiment._train_loader
+        data_loader.dataset.select_new_partition(self.all_classes)
+        if inplace:
+            return data_loader
+        return deepcopy(data_loader)
+
+    def test_loader(self, inplace=False):
+        data_loader = self.experiment._test_loader
+        data_loader.dataset.select_new_partition(self.all_classes)
+        if inplace:
+            return data_loader
+        return deepcopy(data_loader)
 
     def model(self, inplace=False):
         model = self.backbone
@@ -83,22 +106,10 @@ class Session:
         return deepcopy(model)
 
     def get_train_acc(self, selected_classes):
-        original_partition = self.train_loader.dataset.classes
-
-        self.train_loader.dataset.select_new_partition(self.all_classes)
-        acc = selected_class_accuracy(self.model(inplace=True), self.train_loader, selected_classes, self.device)
-
-        self.train_loader.dataset.select_new_partition(original_partition)
-        return acc
+        return selected_class_accuracy(self.model(inplace=True), self.train_loader, selected_classes, self.device)
 
     def get_test_acc(self, selected_classes):
-        original_partition = self.test_loader.dataset.classes
-
-        self.test_loader.dataset.select_new_partition(self.all_classes)
-        acc = selected_class_accuracy(self.model(inplace=True), self.test_loader, selected_classes, self.device)
-
-        self.test_loader.dataset.select_new_partition(original_partition)
-        return acc
+        return selected_class_accuracy(self.model(inplace=True), self.test_loader, selected_classes, self.device)
 
     def train_accs(self):
         return { k: self.get_train_acc(v) for k, v in self.class_info.items() }
