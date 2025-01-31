@@ -6,11 +6,12 @@ def selected_class_accuracy(model, dataloader, selected_classes, device, verbose
     total_acc = 0.0
     total_samples = 0
 
-    class_partition = dataloader.dataset.classes
-    is_selected_classes_in_partition = torch.isin(
-        torch.tensor(selected_classes), torch.tensor(class_partition)
-        ).all().item()
-    assert is_selected_classes_in_partition, f'Selected classes must be included in dataloaders partition'
+    retained_classes = torch.tensor( dataloader.dataset.classes, device=device)
+    selected_classes = torch.tensor( selected_classes, device=device)
+    selected_class_indices = torch.where( torch.isin(retained_classes, selected_classes) )[0]
+            
+    
+    assert torch.isin( selected_classes, retained_classes ).all().item(), f'Selected classes must be included in dataloaders partition'
 
     if len(dataloader)==0:
         return 0.0
@@ -21,14 +22,14 @@ def selected_class_accuracy(model, dataloader, selected_classes, device, verbose
             labels = sample["label"].to(device)  # Assumes one-hot encoded labels
 
             # Filter predictions and labels by selected classes
-            mask = torch.isin(labels.argmax(dim=1), torch.tensor(selected_classes, device=device))
+            mask = torch.isin(labels.argmax(dim=1), selected_class_indices)
             if not mask.any():
                 continue  # Skip this batch if no selected class exists
             
             images = images[mask]
             labels = labels[mask]
 
-            pred = model(images)[:, class_partition] # Matchs with dataloader label order
+            pred = model(images)[:, retained_classes] # Matchs with dataloader label order
             pred_labels = pred.argmax(dim=1)
             true_labels = labels.argmax(dim=1)
 
@@ -41,3 +42,4 @@ def selected_class_accuracy(model, dataloader, selected_classes, device, verbose
 
     acc = total_acc / total_samples if total_samples > 0 else 0.0
     return acc
+
