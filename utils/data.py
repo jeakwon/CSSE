@@ -28,7 +28,7 @@ def load_cifar100(
     data_path: str = CACHE_DIR, 
     shuffle: bool = True,
     batch_size: int = 100,
-    num_workers: int = 2) -> (CifarDataSet, DataLoader):
+    num_workers: int = 2) -> DataLoader:
     """
     Loads the cifar 100 data set with normalization
     :param data_path: path to the directory containing the data set
@@ -56,7 +56,53 @@ def load_cifar100(
         transformations.append(RandomRotator(degrees=(0,15)))
 
     cifar_data.set_transformation(transforms.Compose(transformations))
+    train_indices, _ = get_validation_and_train_indices(cifar_data)
+    subsample_cifar_data_set(sub_sample_indices=train_indices, cifar_data=cifar_data)
     return DataLoader(cifar_data, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+
+
+def subsample_cifar_data_set(sub_sample_indices, cifar_data: CifarDataSet):
+    """
+    Sub-samples the CIFAR-100 data set according to the given indices.
+    Modifies cifar_data in place.
+    """
+    cifar_data.data["data"] = cifar_data.data["data"][sub_sample_indices.numpy()]
+    cifar_data.data["labels"] = cifar_data.data["labels"][sub_sample_indices.numpy()]
+    cifar_data.integer_labels = (
+        torch.tensor(cifar_data.integer_labels)[sub_sample_indices.numpy()].tolist()
+    )
+    cifar_data.current_data = cifar_data.partition_data()
+
+
+def get_validation_and_train_indices(cifar_data: CifarDataSet, num_classes: int = 100):
+    """
+    Splits the CIFAR-100 data into validation (50 per class) and train (450 per class).
+    Returns (train_indices, validation_indices).
+    """
+    num_val_samples_per_class = 50
+    num_train_samples_per_class = 450
+    validation_set_size = num_val_samples_per_class * num_classes
+    train_set_size = num_train_samples_per_class * num_classes
+
+    validation_indices = torch.zeros(validation_set_size, dtype=torch.int32)
+    train_indices = torch.zeros(train_set_size, dtype=torch.int32)
+    current_val_samples = 0
+    current_train_samples = 0
+
+    for i in range(num_classes):
+        class_indices = torch.argwhere(cifar_data.data["labels"][:, i] == 1).flatten()
+        validation_indices[current_val_samples:(current_val_samples + num_val_samples_per_class)] = (
+            class_indices[:num_val_samples_per_class]
+        )
+        train_indices[current_train_samples:(current_train_samples + num_train_samples_per_class)] = (
+            class_indices[num_val_samples_per_class:]
+        )
+        current_val_samples += num_val_samples_per_class
+        current_train_samples += num_train_samples_per_class
+
+    return train_indices, validation_indices
+
+
 
 def load_class_order(algo, seed):
     algorithm = ALGORITHM[algo]
