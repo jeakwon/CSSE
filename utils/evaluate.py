@@ -3,8 +3,8 @@ import torch
 def selected_class_accuracy(model, dataloader, selected_classes, device):
     """Evaluate the model accuracy for selected classes."""
     model.eval()
-    avg_acc = 0.0
-    num_test_batches = 0
+    total_acc = 0.0
+    total_samples = 0
 
     with torch.no_grad():
         for _, sample in enumerate(dataloader):
@@ -14,7 +14,7 @@ def selected_class_accuracy(model, dataloader, selected_classes, device):
             # Filter predictions and labels by selected classes
             mask = torch.isin(torch.argmax(test_labels, dim=1), torch.tensor(selected_classes, device=device))
             if not mask.any():
-                continue
+                continue  # Skip this batch if no selected class exists
 
             images = images[mask]
             test_labels = test_labels[mask]
@@ -24,7 +24,16 @@ def selected_class_accuracy(model, dataloader, selected_classes, device):
             true_labels = torch.argmax(test_labels, axis=1)
 
             # Compute accuracy for selected classes
-            avg_acc += torch.mean((predicted_labels == true_labels).to(torch.float32))
-            num_test_batches += 1
-    acc = (avg_acc / num_test_batches).item() if num_test_batches > 0 else 0.0
+            correct_predictions = (predicted_labels == true_labels).sum().item()
+            batch_size = len(true_labels)
+
+            total_acc += correct_predictions
+            total_samples += batch_size
+
+    # Avoid division by zero
+    if total_samples > 0 :
+        acc = total_acc / total_samples
+    else:
+        acc = 0.0
+        print('else')
     return acc
