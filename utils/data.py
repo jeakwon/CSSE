@@ -5,11 +5,20 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
+from csse.utils.tools import load_npy
 from csse.external_codes.mlproj_manager.cifar_data_loader import CifarDataSet
 from csse.external_codes.mlproj_manager.image_transformations import (
     ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 )
 
+# Mapping of algorithm abbreviations to their full names
+ALGORITHM = {
+    'bp': 'base_deep_learning_system',
+    'cb': 'continual_backpropagation',
+    'hr': 'head_resetting',
+    'rt': 'retrained_network',
+    'sp': 'shrink_and_perturb',
+}
 # Define a unified cache directory for storing .npy and .pt files
 CACHE_DIR = os.path.expanduser("~/.cache/csse/")
 os.makedirs(CACHE_DIR, exist_ok=True)  # Ensure cache directory exists
@@ -48,3 +57,14 @@ def load_cifar100(
 
     cifar_data.set_transformation(transforms.Compose(transformations))
     return DataLoader(cifar_data, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+
+def load_class_info(algo, seed, session):
+    algorithm = ALGORITHM[algo]
+    file_name = f'index-{seed}.npy'
+    url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algorithm}/class_order/{file_name}"
+    class_order = load_npy(url)
+    return dict(class_order = class_order,
+                learned_classes = class_order[:session*5],
+                earlier_classes = class_order[:(session-1)*5],
+                current_classes = class_order[(session-1)*5:session*5],
+                unknown_classes = class_order[:session*5])
