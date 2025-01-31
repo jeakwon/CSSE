@@ -39,7 +39,7 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
         return accs
 
     def __getitem__(self, session):
-        return self.sessions[session]
+        return self.sessions[session]()
     
     def session(self, session):
         return self.sessions[session]
