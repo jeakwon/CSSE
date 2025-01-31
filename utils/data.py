@@ -29,7 +29,8 @@ def load_cifar100(
     shuffle: bool = True,
     batch_size: int = 100,
     num_workers: int = 2,
-    exclude_validset = True) -> DataLoader:
+    exclude_validset = True,
+    device = None) -> DataLoader:
     """
     Loads the cifar 100 data set with normalization
     :param data_path: path to the directory containing the data set
@@ -39,7 +40,7 @@ def load_cifar100(
     cifar_data = CifarDataSet(root_dir=data_path,
                               train=train,
                               cifar_type=100,
-                              device=None,
+                              device=device,
                               image_normalization="max",
                               label_preprocessing="one-hot",
                               use_torch=True)

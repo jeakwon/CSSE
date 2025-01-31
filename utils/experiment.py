@@ -16,9 +16,9 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
         
         self.class_order = load_class_order(algo, seed)
 
-        self.train_loader = load_cifar100(train=True, batch_size=batch_size, num_workers=num_workers)
+        self.train_loader = load_cifar100(train=True, batch_size=batch_size, num_workers=num_workers, device=device)
         self.train_loader.dataset.select_new_partition(self.class_order)
-        self.test_loader = load_cifar100(train=False, batch_size=batch_size, num_workers=num_workers)
+        self.test_loader = load_cifar100(train=False, batch_size=batch_size, num_workers=num_workers, device=device)
         self.test_loader.dataset.select_new_partition(self.class_order)
 
         self.backbone = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d).to(device)
