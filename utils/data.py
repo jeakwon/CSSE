@@ -72,6 +72,6 @@ def parse_class_order(class_order, session, num_classes_per_session):
                 recent_classes = class_order[max(0, (session-1)*N):session*N],
                 unseen_classes = class_order[session*N:])
 
-def load_class_info(algo, seed, session):
+def load_class_info(algo, seed, session, num_classes_per_session):
     class_order = load_class_order(algo, seed, session)
-    return parse_class_order(class_order, session)
+    return parse_class_order(class_order, session, num_classes_per_session)
