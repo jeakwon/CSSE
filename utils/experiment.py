@@ -1,4 +1,5 @@
 
+from tqdm import tqdm
 import torch
 from copy import deepcopy
 
@@ -21,6 +22,22 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
         self.backbone = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d).to(device)
         self.sessions = { session: Session(session=session, experiment=self) for session in sessions }
 
+    def train_accs(self, verbose=True):
+        accs = []
+        for i in tqdm(self.sessions, desc="Evaluating Train Accs", disable=not verbose):
+            acc_dict = self.session(i).train_accs()
+            acc_dict.update({'algo':self.algo, 'seed':self.seed, 'session':i, 'acc_type':'train'})
+            accs.append(acc_dict)
+        return accs
+
+    def test_accs(self, verbose=True):
+        accs = []
+        for i in tqdm(self.sessions, desc="Evaluating Test Accs", disable=not verbose):
+            acc_dict = self.session(i).test_accs()
+            acc_dict.update({'algo':self.algo, 'seed':self.seed, 'session':i, 'acc_type':'test'})
+            accs.append(acc_dict)
+        return accs
+
     def __getitem__(self, session):
         return self.sessions[session]
     
@@ -36,33 +53,32 @@ class Session:
         self.seed = experiment.seed
         self.device = experiment.device
         self.backbone = experiment.backbone
+        self.class_order = experiment.class_order
         self.train_loader = experiment.train_loader
         self.test_loader = experiment.test_loader
 
         self.state_dict = load_lop_resnet18_state_dict(self.algo, self.seed, self.session)
         self.class_info = parse_class_order(self.experiment.class_order, self.session, num_classes_per_session=5)
-        self.trained_classes = self.class_info['trained_classes']
-        self.previous_classes = self.class_info['previous_classes']
-        self.recent_classes = self.class_info['recent_classes']
-        self.unseen_classes = self.class_info['unseen_classes']
+        self.all_classes = self.class_info['all_classes']
+        self.old_classes = self.class_info['old_classes']
+        self.new_classes = self.class_info['new_classes']
 
     def model(self, inplace=False):
         model = self.backbone
         model.load_state_dict(self.state_dict)
+        model.to(self.device)
         if inplace:
             return model
         return deepcopy(model)
 
-    # def train_acc(self):
-    #     model = self.model(inplace=True)
-    #     accuracies = {}
-    #     for class_name, selected_classes in self.class_info.items():
-    #         accuracies[class_name] = selected_class_accuracy(model, self.train_loader, selected_classes, self.device)
-    #     return accuracies
+    def get_train_acc(self, selected_classes):
+        return selected_class_accuracy(self.model(inplace=True), self.train_loader, selected_classes, self.device)
+
+    def get_test_acc(self, selected_classes):
+        return selected_class_accuracy(self.model(inplace=True), self.test_loader, selected_classes, self.device)
+
+    def train_accs(self):
+        return { k: self.get_train_acc(v) for k, v in self.class_info.items() }
     
-    # def test_acc(self):
-    #     model = self.model(inplace=True)
-    #     accuracies = {}
-    #     for class_name, selected_classes in self.class_info.items():
-    #         accuracies[class_name] = selected_class_accuracy(model, self.test_loader, selected_classes, self.device)
-    #     return accuracies
+    def test_accs(self):
+        return { k: self.get_test_acc(v) for k, v in self.class_info.items() }
