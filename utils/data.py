@@ -65,6 +65,6 @@ def load_class_info(algo, seed, session):
     class_order = load_npy(url)
     return dict(class_order = class_order,
                 learned_classes = class_order[:session*5],
-                earlier_classes = class_order[:(session-1)*5],
-                current_classes = class_order[(session-1)*5:session*5],
+                earlier_classes = class_order[:max(0, (session-1)*5)],
+                current_classes = class_order[max(0, (session-1)*5):session*5],
                 unknown_classes = class_order[session*5:])
