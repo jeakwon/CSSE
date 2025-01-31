@@ -67,10 +67,9 @@ def load_class_order(algo, seed):
 
 def parse_class_order(class_order, session, num_classes_per_session):
     N = num_classes_per_session
-    return dict(trained_classes = class_order[:session*N],
-                previous_classes = class_order[:max(0, (session-1)*N)],
-                recent_classes = class_order[max(0, (session-1)*N):session*N],
-                unseen_classes = class_order[session*N:])
+    return dict(all_classes = class_order[:session*N],
+                old_classes = class_order[:max(0, (session-1)*N)],
+                new_classes = class_order[max(0, (session-1)*N):session*N])
 
 def load_class_info(algo, seed, session, num_classes_per_session):
     class_order = load_class_order(algo, seed, session)
