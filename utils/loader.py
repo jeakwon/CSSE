@@ -41,9 +41,16 @@ def is_url(path: str) -> bool:
     return urllib.parse.urlparse(path).scheme in ("http", "https")
 
 def get_cached_path(url):
-    """Generate a local cached file path based on the URL filename."""
-    filename = os.path.basename(url)  # Extract filename from URL
-    return os.path.join(CACHE_DIR, filename)
+    """Generate a local cached file path using a subdirectory structure for readability."""
+    parsed_url = urllib.parse.urlparse(url)
+    sub_dirs = parsed_url.path.lstrip("/").split("/")[:-1]  # Extract subdirectories
+    filename = os.path.basename(parsed_url.path)  # Get the actual filename
+
+    # Create subdirectory path inside cache
+    subdir_path = os.path.join(CACHE_DIR, *sub_dirs)
+    os.makedirs(subdir_path, exist_ok=True)  # Ensure subdirectory exists
+
+    return os.path.join(subdir_path, filename)  # Return full path
 
 def load_npy(file_path):
     """Load a NumPy array from either a URL (with caching) or a local file."""
@@ -78,12 +85,12 @@ def load_state_dict(file_path: str):
         # Use cached file if it exists
         if os.path.exists(cached_file):
             print(f"Using cached state_dict: {cached_file}")
-            return torch.load(cached_file, map_location="cpu")
+            return torch.load(cached_file, map_location="cpu", weights_only=True)
 
         # Otherwise, download and cache
         print(f"Downloading state_dict from: {file_path}")
         state_dict = torch.hub.load_state_dict_from_url(
-            file_path, model_dir=CACHE_DIR, map_location="cpu", check_hash=False, progress=True
+            file_path, model_dir=os.path.dirname(cached_file), map_location="cpu", check_hash=False, progress=True
         )
 
         return state_dict
