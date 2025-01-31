@@ -2,7 +2,7 @@ from csse.utils.data import load_cifar100, load_class_info
 from csse.utils.model import load_lop_resnet18
 from csse.utils.evaluate import selected_class_accuracy
 
-class LoadLopExperiment:
+class Lop_ResNet18_CIFAR100_CIL_Experiment:
     def __init__(self, algo, seed, session, device='cuda', batch_size=100, num_workers=2):
         self.algo=algo
         self.seed=seed
