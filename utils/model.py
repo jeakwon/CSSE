@@ -12,11 +12,11 @@ ALGORITHM = {
     'sp': 'shrink_and_perturb',
 }
 
-def load_lop_resnet18_state_dict(algo, seed, session):
+def load_lop_resnet18_state_dict(algo, seed, session, cache_dir=None):
     algorithm = ALGORITHM[algo]
     file_name = f'index-{seed}_epoch-{session*200}.pt'
     url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algorithm}/model_parameters/{file_name}"
-    state_dict = load_state_dict(url)
+    state_dict = load_state_dict(url, cache_dir=cache_dir)
     return state_dict
 
 def load_lop_resnet18(algo, seed, session):

@@ -13,22 +13,26 @@ def is_url(path: str) -> bool:
     """Check if the given path is a URL."""
     return urllib.parse.urlparse(path).scheme in ("http", "https")
 
-def get_cached_path(url):
+def get_cached_path(url, cache_dir):
     """Generate a local cached file path using a subdirectory structure for readability."""
     parsed_url = urllib.parse.urlparse(url)
     sub_dirs = parsed_url.path.lstrip("/").split("/")[:-1]  # Extract subdirectories
     filename = os.path.basename(parsed_url.path)  # Get the actual filename
 
     # Create subdirectory path inside cache
-    subdir_path = os.path.join(CACHE_DIR, *sub_dirs)
+    subdir_path = os.path.join(cache_dir, *sub_dirs)
     os.makedirs(subdir_path, exist_ok=True)  # Ensure subdirectory exists
 
     return os.path.join(subdir_path, filename)  # Return full path
 
-def load_npy(file_path):
+def load_npy(file_path, cache_dir=None):
     """Load a NumPy array from either a URL (with caching) or a local file."""
+    if cache_dir is None:
+        cache_dir = CACHE_DIR
+    else:
+        cache_dir = os.path.join(cache_dir, '.cache/csse/')
     if is_url(file_path):
-        cached_file = get_cached_path(file_path)
+        cached_file = get_cached_path(file_path, cache_dir)
 
         # Use cached file if it exists
         if os.path.exists(cached_file):
@@ -36,7 +40,7 @@ def load_npy(file_path):
             return np.load(cached_file)
 
         # Otherwise, download and cache
-        print(f"Downloading .npy file from: {file_path}")
+        print(f"Downloading .npy file from: {file_path} to {cached_file}")
         response = requests.get(file_path)
         response.raise_for_status()
 
@@ -50,10 +54,14 @@ def load_npy(file_path):
     else:
         raise ValueError(f"File or URL not found: {file_path}")
 
-def load_state_dict(file_path: str):
+def load_state_dict(file_path, cache_dir=None):
     """Load PyTorch state_dict from either a URL or a local file (with caching)."""
+    if cache_dir is None:
+        cache_dir = CACHE_DIR
+    else:
+        cache_dir = os.path.join(cache_dir, '.cache/csse/')
     if is_url(file_path):
-        cached_file = get_cached_path(file_path)
+        cached_file = get_cached_path(file_path, cache_dir)
 
         # Use cached file if it exists
         if os.path.exists(cached_file):
@@ -71,3 +79,4 @@ def load_state_dict(file_path: str):
         return torch.load(file_path, map_location="cpu")
     else:
         raise ValueError(f"File or URL not found: {file_path}")
+

@@ -9,16 +9,18 @@ from csse.utils.model import load_lop_resnet18_state_dict
 from csse.utils.evaluate import selected_class_accuracy
 
 class Load_ResNet18_CIFAR100_CIL_Experiment:
-    def __init__(self, algo, seed, sessions=range(21), device='cuda', batch_size=100, num_workers=2):
+    def __init__(self, algo, seed, sessions=range(21), device='cuda', batch_size=100, num_workers=2, cache_dir=None):
         self.algo = algo
         self.seed = seed
         self.device = device
+        self.cache_dir = cache_dir
         
-        self.class_order = load_class_order(algo, seed)
+        self.class_order = load_class_order(algo, seed, cache_dir=self.cache_dir)
 
-        self.train_loader = load_cifar100(train=True, batch_size=batch_size, num_workers=num_workers)
+        self.train_loader = load_cifar100(train=True, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
         self.train_loader.dataset.select_new_partition(self.class_order)
-        self.test_loader = load_cifar100(train=False, batch_size=batch_size, num_workers=num_workers)
+
+        self.test_loader = load_cifar100(train=False, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
         self.test_loader.dataset.select_new_partition(self.class_order)
 
         self.backbone = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d).to(device)
@@ -64,8 +66,9 @@ class Session:
         self.class_order = experiment.class_order
         self.train_loader = experiment.train_loader
         self.test_loader = experiment.test_loader
+        self.cache_dir = experiment.cache_dir
 
-        self.state_dict = load_lop_resnet18_state_dict(self.algo, self.seed, self.session)
+        self.state_dict = load_lop_resnet18_state_dict(self.algo, self.seed, self.session, cache_dir=self.cache_dir)
         self.class_info = parse_class_order(self.experiment.class_order, self.session, num_classes_per_session=5)
         self.all_classes = self.class_info['all_classes']
         self.old_classes = self.class_info['old_classes']

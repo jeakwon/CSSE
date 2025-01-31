@@ -25,7 +25,7 @@ os.makedirs(CACHE_DIR, exist_ok=True)  # Ensure cache directory exists
 
 def load_cifar100(
     train: bool = True, 
-    data_path: str = CACHE_DIR, 
+    data_path: str = None, 
     shuffle: bool = True,
     batch_size: int = 100,
     num_workers: int = 2,
@@ -36,6 +36,10 @@ def load_cifar100(
     :param train: bool that indicates whether to load the train or test data
     :return: torch DataLoader object
     """
+    if data_path is None:
+        data_path = CACHE_DIR
+    else:
+        data_path = os.path.join(data_path, '.cache/csse/')
     cifar_data = CifarDataSet(root_dir=data_path,
                               train=train,
                               cifar_type=100,
@@ -107,11 +111,11 @@ def get_validation_and_train_indices(cifar_data: CifarDataSet, num_classes: int 
 
 
 
-def load_class_order(algo, seed):
+def load_class_order(algo, seed, cache_dir=None):
     algorithm = ALGORITHM[algo]
     file_name = f'index-{seed}.npy'
     url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algorithm}/class_order/{file_name}"
-    class_order = load_npy(url)
+    class_order = load_npy(url, cache_dir=cache_dir)
     return class_order
 
 def parse_class_order(class_order, session, num_classes_per_session):
