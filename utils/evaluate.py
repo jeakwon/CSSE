@@ -6,34 +6,35 @@ def selected_class_accuracy(model, dataloader, selected_classes, device):
     total_acc = 0.0
     total_samples = 0
 
+    class_partition = dataloader.dataset.classes
+    is_selected_classes_in_partition = torch.isin(
+        torch.tensor(selected_classes), torch.tensor(class_partition)
+        ).all().item()
+    assert is_selected_classes_in_partition, f'Selected classes must be included in dataloaders partition'
+
     with torch.no_grad():
         for _, sample in enumerate(dataloader):
             images = sample["image"].to(device)
-            test_labels = sample["label"].to(device)  # Assumes one-hot encoded labels
+            labels = sample["label"].to(device)  # Assumes one-hot encoded labels
 
             # Filter predictions and labels by selected classes
-            mask = torch.isin(torch.argmax(test_labels, dim=1), torch.tensor(selected_classes, device=device))
+            mask = torch.isin(labels.argmax(dim=1), torch.tensor(selected_classes, device=device))
             if not mask.any():
                 continue  # Skip this batch if no selected class exists
-
+            
             images = images[mask]
-            test_labels = test_labels[mask]
+            labels = labels[mask]
 
-            test_predictions = model(images)
-            predicted_labels = test_predictions.argmax(axis=1)
-            true_labels = torch.argmax(test_labels, axis=1)
+            pred = model(images)[:, class_partition] # Matchs with dataloader labels
+            pred_labels = pred.argmax(dim=1)
+            true_labels = labels.argmax(dim=1)
 
             # Compute accuracy for selected classes
-            correct_predictions = (predicted_labels == true_labels).sum().item()
+            correct_predictions = (pred_labels == true_labels).sum().item()
             batch_size = len(true_labels)
 
             total_acc += correct_predictions
             total_samples += batch_size
 
-    # Avoid division by zero
-    if total_samples > 0 :
-        acc = total_acc / total_samples
-    else:
-        acc = 0.0
-        print('else')
+    acc = total_acc / total_samples if total_samples > 0 else 0.0
     return acc
