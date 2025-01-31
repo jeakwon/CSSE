@@ -58,13 +58,20 @@ def load_cifar100(
     cifar_data.set_transformation(transforms.Compose(transformations))
     return DataLoader(cifar_data, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
 
-def load_class_info(algo, seed, session):
+def load_class_order(algo, seed):
     algorithm = ALGORITHM[algo]
     file_name = f'index-{seed}.npy'
     url = f"https://huggingface.co/onlytojay/lop-resnet18/resolve/main/{algorithm}/class_order/{file_name}"
     class_order = load_npy(url)
-    return dict(class_order = class_order,
-                learned_classes = class_order[:session*5],
-                earlier_classes = class_order[:max(0, (session-1)*5)],
-                current_classes = class_order[max(0, (session-1)*5):session*5],
-                unknown_classes = class_order[session*5:])
+    return class_order
+
+def parse_class_order(class_order, session, num_classes_per_session):
+    N = num_classes_per_session
+    return dict(entire_classes = class_order[:session*N],
+                former_classes = class_order[:max(0, (session-1)*N)],
+                recent_classes = class_order[max(0, (session-1)*N):session*N],
+                unseen_classes = class_order[session*N:])
+
+def load_class_info(algo, seed, session):
+    class_order = load_class_order(algo, seed, session)
+    return parse_class_order(class_order, session)
