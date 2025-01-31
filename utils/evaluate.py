@@ -1,23 +1,23 @@
 import torch
 
-def selected_class_accuracy(model, dataloader, selected_classes, device, verbose=False):
+def selected_class_accuracy(model, data_loader, selected_classes, device, verbose=False):
     """Evaluate the model accuracy for selected classes."""
     model.eval()
     total_acc = 0.0
     total_samples = 0
 
-    retained_classes = torch.tensor( dataloader.dataset.classes, device=device)
+    retained_classes = torch.tensor( data_loader.dataset.classes, device=device)
     selected_classes = torch.tensor( selected_classes, device=device)
     selected_class_indices = torch.where( torch.isin(retained_classes, selected_classes) )[0]
             
     
     assert torch.isin( selected_classes, retained_classes ).all().item(), f'Selected classes must be included in dataloaders partition'
 
-    if len(dataloader)==0:
+    if len(data_loader)==0:
         return 0.0
         
     with torch.no_grad():
-        for _, sample in enumerate(dataloader):
+        for _, sample in enumerate(data_loader):
             images = sample["image"].to(device)
             labels = sample["label"].to(device)  # Assumes one-hot encoded labels
 
@@ -29,7 +29,7 @@ def selected_class_accuracy(model, dataloader, selected_classes, device, verbose
             images = images[mask]
             labels = labels[mask]
 
-            pred = model(images)[:, retained_classes] # Matchs with dataloader label order
+            pred = model(images)[:, retained_classes] # Matchs with data_loader label order
             pred_labels = pred.argmax(dim=1)
             true_labels = labels.argmax(dim=1)
 
