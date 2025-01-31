@@ -25,7 +25,7 @@ def selected_class_accuracy(model, dataloader, selected_classes, device):
             images = images[mask]
             labels = labels[mask]
 
-            pred = model(images)[:, class_partition] # Matchs with dataloader labels
+            pred = model(images)[:, class_partition] # Matchs with dataloader label order
             pred_labels = pred.argmax(dim=1)
             true_labels = labels.argmax(dim=1)
 
