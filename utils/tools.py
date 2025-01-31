@@ -61,7 +61,6 @@ def load_state_dict(file_path: str):
             return torch.load(cached_file, map_location="cpu", weights_only=True)
 
         # Otherwise, download and cache
-        print(f"Downloading state_dict from: {file_path}")
         state_dict = torch.hub.load_state_dict_from_url(
             file_path, model_dir=os.path.dirname(cached_file), map_location="cpu", check_hash=False, progress=True
         )
