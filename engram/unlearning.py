@@ -47,16 +47,29 @@ def unlearning_accuacy(forget_classes, model, data_loader, device='cuda'):
     return retain_acc, forget_acc, rfa
 
 class Unlearning:
-    def __init__(self, model, train_loader, valid_loader, test_loader, criterion, optimizer, device='cuda'):
+    def __init__(self, 
+                 model, 
+                 train_loader, 
+                 valid_loader, 
+                 test_loader, 
+                 criterion, 
+                 optimizer, 
+                 epochs=50, 
+                 early_stop_patience=5,
+                 save_path='./best_model.pt',
+                 device='cuda'):
         self.model = model
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         self.test_loader = test_loader
         self.criterion = criterion
         self.optimizer = optimizer
+        self.epochs = epochs
+        self.early_stop_patience
+        self.save_path
         self.device = device
 
-    def run(self, forget_classes, epochs=50, save_path='./best_model.pt', early_stop_patience=5):
+    def run(self, forget_classes):
         baseline_retain_acc, baseline_forget_acc, baseline_rfa = unlearning_accuacy(forget_classes, self.model, self.valid_loader, device=self.device)
 
         print(f"**Training** Loss <- Trainset | Retain Acc. <- Validset | Forget Acc. <- Validset | RFA <- Validset")
@@ -65,7 +78,7 @@ class Unlearning:
         best_rfa = baseline_rfa
         best_epoch = 0
         epochs_without_improvement = 0
-        for epoch in range(1, epochs+1):
+        for epoch in range(1, self.epochs+1):
             loss = unlearn_one_epoch(forget_classes, self.model, self.train_loader, self.criterion, self.optimizer, device=self.device)
             
             retain_acc, forget_acc, rfa = unlearning_accuacy(forget_classes, self.model, self.valid_loader, device=self.device
@@ -73,23 +86,23 @@ class Unlearning:
             if rfa > best_rfa:
                 best_rfa = rfa
                 best_epoch = epoch
-                torch.save(self.model.state_dict(), save_path)
+                torch.save(self.model.state_dict(), self.save_path)
                 epochs_without_improvement = 0
-                mark_best = f' <-- BEST (Saved as {save_path})'
+                mark_best = f' <-- BEST (Saved as {self.save_path})'
             else:
                 mark_best = ''
                 epochs_without_improvement += 1
 
             print(f"[ Epoch {epoch:2d} ] Loss: {loss:10.4f} | Retain Acc.: {retain_acc:10.2%} | Forget Acc.: {forget_acc:10.2%} | RFA: {rfa:10.2%}{mark_best}")
 
-            if epochs_without_improvement >= early_stop_patience:
-                print(f"Early stopping triggered. No improvement in RFA for {early_stop_patience} consecutive epochs.")
+            if epochs_without_improvement >= self.early_stop_patience:
+                print(f"Early stopping triggered. No improvement in RFA for {self.early_stop_patience} consecutive epochs.")
                 break
 
 
         print("\nTraining finished. Loading best model for testset evaluation...")
         
-        self.model.load_state_dict(torch.load(save_path, weights_only=True))
+        self.model.load_state_dict(torch.load(self.save_path, weights_only=True))
         endpoint_retain_acc, endpoint_forget_acc, endpoint_rfa = unlearning_accuacy(forget_classes, self.model, self.test_loader, device=self.device)
         print(f"**Testing*** Loss <- Trainset  | Retain Acc. <- Testset  | Forget Acc. <- Testset  | RFA <- Testset ")
         print(f"[ Endpoint ] Loss: {'N/A':>10} | Retain Acc.: {endpoint_retain_acc:10.2%} | Forget Acc.: {endpoint_forget_acc:10.2%} | RFA: {endpoint_rfa:10.2%}")
@@ -104,4 +117,4 @@ class Unlearning:
             endpoint_forget_acc=endpoint_forget_acc, 
             endpoint_rfa=endpoint_rfa,
         )
-        return self.model, result
+        return result
