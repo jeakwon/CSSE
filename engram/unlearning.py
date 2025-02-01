@@ -7,8 +7,8 @@ def unlearn_one_epoch(forget_classes, model, data_loader, criterion, optimizer, 
     model.train()
     avg_loss = 0.0
 
-    entire_classes = torch.tensor( data_loader.dataset.classes, device=device)
-    forget_classes = torch.tensor( forget_classes, device=device)
+    entire_classes = torch.as_tensor(data_loader.dataset.classes).to(device)
+    forget_classes = torch.as_tensor(forget_classes).to(device)
     forget_indices = torch.where( torch.isin(entire_classes, forget_classes) )[0]
 
     assert torch.isin( forget_classes, entire_classes ).all().item(), f'Selected classes must be included in data_loader partition'
@@ -37,9 +37,9 @@ def unlearn_one_epoch(forget_classes, model, data_loader, criterion, optimizer, 
     return avg_loss
 
 def unlearning_accuacy(forget_classes, model, data_loader, device='cuda'):
-    entire_classes = torch.tensor( data_loader.dataset.classes, device=device)
-    forget_classes = torch.tensor( forget_classes, device=device)
-    retain_classes = torch.tensor( [c for c in entire_classes if c not in forget_classes], device=device)
+    entire_classes = torch.as_tensor( data_loader.dataset.classes).to(device)
+    forget_classes = torch.as_tensor( forget_classes).to(device)
+    retain_classes = torch.as_tensor( [c for c in entire_classes if c not in forget_classes]).to(device)
 
     forget_acc = selected_class_accuracy(model, data_loader, forget_classes, device='cuda')
     retain_acc = selected_class_accuracy(model, data_loader, retain_classes, device='cuda')
