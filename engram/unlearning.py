@@ -65,8 +65,8 @@ class Unlearning:
         self.criterion = criterion
         self.optimizer = optimizer
         self.epochs = epochs
-        self.early_stop_patience
-        self.save_path
+        self.early_stop_patience = early_stop_patience
+        self.save_path = save_path
         self.device = device
 
     def run(self, forget_classes):
