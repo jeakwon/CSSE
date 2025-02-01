@@ -14,12 +14,12 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
         self.seed = seed
         self.device = device
         self.cache_dir = cache_dir
-        
+
         self.class_order = load_class_order(algo, seed, cache_dir=self.cache_dir)
 
         self._train_loader = load_cifar100(train=True, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
         self._test_loader = load_cifar100(train=False, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
-        
+
         self.backbone = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d).to(device)
         self.sessions = { session: Session(session=session, experiment=self) for session in sessions }
 
@@ -61,7 +61,7 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
 
     def __len__(self):
         return len(self.sessions)
-    
+
     def session(self, session):
         return self.sessions[session]
 
@@ -82,7 +82,7 @@ class Session:
         self.all_classes = self.class_info['all_classes']
         self.old_classes = self.class_info['old_classes']
         self.new_classes = self.class_info['new_classes']
-    
+
     def train_loader(self, inplace=False):
         data_loader = self.experiment._train_loader
         data_loader.dataset.select_new_partition(self.all_classes)
@@ -113,6 +113,6 @@ class Session:
 
     def train_accs(self):
         return { k: self.get_train_acc(v) for k, v in self.class_info.items() }
-    
+
     def test_accs(self):
         return { k: self.get_test_acc(v) for k, v in self.class_info.items() }
