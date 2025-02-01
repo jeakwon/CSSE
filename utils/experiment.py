@@ -106,10 +106,10 @@ class Session:
         return deepcopy(model)
 
     def get_train_acc(self, selected_classes):
-        return selected_class_accuracy(self.model(inplace=True), self.train_loader, selected_classes, self.device)
+        return selected_class_accuracy(self.model(inplace=True), self.train_loader(inplace=True), selected_classes, self.device)
 
     def get_test_acc(self, selected_classes):
-        return selected_class_accuracy(self.model(inplace=True), self.test_loader, selected_classes, self.device)
+        return selected_class_accuracy(self.model(inplace=True), self.test_loader(inplace=True), selected_classes, self.device)
 
     def train_accs(self):
         return { k: self.get_train_acc(v) for k, v in self.class_info.items() }
