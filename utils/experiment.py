@@ -17,14 +17,22 @@ class Load_ResNet18_CIFAR100_CIL_Experiment:
 
         self.class_order = load_class_order(algo, seed, cache_dir=self.cache_dir)
 
-        self._train_loader = load_cifar100(train=True, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
-        self._test_loader = load_cifar100(train=False, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
+        self._train_loader = load_cifar100(train=True, valid=False, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
+        self._valid_loader = load_cifar100(train=True, valid=True, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
+        self._test_loader = load_cifar100(train=False, valid=False, data_path=self.cache_dir, batch_size=batch_size, num_workers=num_workers)
 
         self.backbone = build_resnet18(num_classes=100, norm_layer=torch.nn.BatchNorm2d).to(device)
         self.sessions = { session: Session(session=session, experiment=self) for session in sessions }
 
     def train_loader(self, inplace=False):
-        data_loader = self._test_loader
+        data_loader = self._train_loader
+        data_loader.dataset.select_new_partition(self.all_classes)
+        if inplace:
+            return data_loader
+        return deepcopy(data_loader)
+
+    def valid_loader(self, inplace=False):
+        data_loader = self._valid_loader
         data_loader.dataset.select_new_partition(self.all_classes)
         if inplace:
             return data_loader
@@ -90,6 +98,13 @@ class Session:
             return data_loader
         return deepcopy(data_loader)
 
+    def valid_loader(self, inplace=False):
+        data_loader = self.experiment._valid_loader
+        data_loader.dataset.select_new_partition(self.all_classes)
+        if inplace:
+            return data_loader
+        return deepcopy(data_loader)
+
     def test_loader(self, inplace=False):
         data_loader = self.experiment._test_loader
         data_loader.dataset.select_new_partition(self.all_classes)
@@ -108,11 +123,17 @@ class Session:
     def get_train_acc(self, selected_classes):
         return selected_class_accuracy(self.model(inplace=True), self.train_loader(inplace=True), selected_classes, self.device)
 
+    def get_valid_acc(self, selected_classes):
+        return selected_class_accuracy(self.model(inplace=True), self.valid_loader(inplace=True), selected_classes, self.device)
+
     def get_test_acc(self, selected_classes):
         return selected_class_accuracy(self.model(inplace=True), self.test_loader(inplace=True), selected_classes, self.device)
 
     def train_accs(self):
         return { k: self.get_train_acc(v) for k, v in self.class_info.items() }
+
+    def valid_accs(self):
+        return { k: self.get_valid_acc(v) for k, v in self.class_info.items() }
 
     def test_accs(self):
         return { k: self.get_test_acc(v) for k, v in self.class_info.items() }

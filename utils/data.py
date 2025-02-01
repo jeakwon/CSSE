@@ -25,11 +25,11 @@ os.makedirs(CACHE_DIR, exist_ok=True)  # Ensure cache directory exists
 
 def load_cifar100(
     train: bool = True, 
+    valid: bool = False,
     data_path: str = None, 
     shuffle: bool = True,
     batch_size: int = 100,
-    num_workers: int = 2,
-    exclude_validset = True) -> DataLoader:
+    num_workers: int = 2) -> DataLoader:
     """
     Loads the cifar 100 data set with normalization
     :param data_path: path to the directory containing the data set
@@ -56,12 +56,13 @@ def load_cifar100(
         Normalize(mean=mean, std=std),  # center by mean and divide by std
     ]
     if train:
-        transformations.append(RandomHorizontalFlip(p=0.5))
-        transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
-        transformations.append(RandomRotator(degrees=(0,15)))
-
-        if exclude_validset:
-            train_indices, _ = get_validation_and_train_indices(cifar_data)
+        train_indices, vaild_indices = get_validation_and_train_indices(cifar_data)
+        if valid:
+            subsample_cifar_data_set(sub_sample_indices=vaild_indices, cifar_data=cifar_data)
+        else:
+            transformations.append(RandomHorizontalFlip(p=0.5))
+            transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
+            transformations.append(RandomRotator(degrees=(0,15)))
             subsample_cifar_data_set(sub_sample_indices=train_indices, cifar_data=cifar_data)
 
     cifar_data.set_transformation(transforms.Compose(transformations))
