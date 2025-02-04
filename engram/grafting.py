@@ -1,10 +1,13 @@
 
+import torch
+import torch.nn as nn
+
 class GraftedModel(nn.Module):
     def __init__(self, base_model, fine_model, init_graft_ratio=0.0001, sigmoid_bias=-5, device="cuda:0"):
         super(GraftedModel, self).__init__()
 
-        self.base_model = deepcopy(base_model).train()
-        self.fine_model = deepcopy(fine_model).train()
+        self.base_model = base_model
+        self.fine_model = fine_model
         self.base_state_dict = {k: v.clone().detach() for k, v in base_model.state_dict().items()}
         self.fine_state_dict = {k: v.clone().detach() for k, v in fine_model.state_dict().items()}
         for module in self.base_model.modules():
